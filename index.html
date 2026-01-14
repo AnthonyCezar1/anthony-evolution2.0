@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTHONY | PRO EVOLUTION 5.0</title>
+    <style>
+        :root { --bg: #050505; --card: #111; --accent: #00ff88; --text: #f0f0f0; --item-bg: #1a1a1a; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; }
+
+        header { background: linear-gradient(180deg, #111, #000); border: 2px solid var(--accent); padding: 15px; border-radius: 20px; text-align: center; margin-bottom: 15px; }
+        .name-tag { font-size: 0.6rem; color: var(--accent); letter-spacing: 4px; font-weight: bold; text-transform: uppercase; }
+        h1 { margin: 5px 0; font-size: 1.6rem; letter-spacing: 1px; }
+
+        .timer-box { background: #001a0d; border: 1px solid var(--accent); border-radius: 15px; padding: 12px; text-align: center; margin-bottom: 15px; }
+        #timer-display { font-size: 2.8rem; font-weight: bold; color: var(--accent); font-family: monospace; display: block; margin-bottom: 5px; }
+        .btn-t { background: var(--accent); border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; color: black; margin: 2px; font-size: 0.8rem; }
+
+        .nav-days { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #333; }
+        .nav-arrow { background: none; border: none; color: var(--accent); font-size: 1.5rem; cursor: pointer; padding: 0 15px; }
+        #day-name { font-weight: bold; font-size: 1.1rem; color: var(--accent); text-transform: uppercase; }
+
+        .card { background: var(--card); border-radius: 15px; padding: 15px; margin-bottom: 15px; border-top: 3px solid var(--accent); }
+        h2 { font-size: 0.9rem; margin: 0 0 12px 0; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+
+        .item { background: var(--item-bg); padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #222; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .item.done { opacity: 0.3; }
+
+        .gram-highlight { color: var(--accent); font-weight: bold; }
+        .load-input { background: #000; border: 1px solid var(--accent); color: var(--accent); width: 60px; text-align: center; padding: 4px; border-radius: 4px; font-weight: bold; outline: none; }
+        
+        .check-circle { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--accent); cursor: pointer; flex-shrink: 0; position: relative; }
+        .item.done .check-circle { background: var(--accent); }
+        .item.done .check-circle::after { content: '✓'; color: black; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: bold; font-size: 12px; }
+
+        .weight-main { background: transparent; border: none; border-bottom: 1px solid var(--accent); color: white; width: 55px; text-align: center; font-size: 1.1rem; font-weight: bold; }
+        .btn-reset { width: 100%; background: none; border: 1px solid #333; color: #555; padding: 10px; border-radius: 10px; margin-top: 10px; cursor: pointer; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span class="name-tag">Pro Athlete System 5.0</span>
+        <h1>ANTHONY</h1>
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 8px;">
+            PESO: <input type="number" id="global-weight" class="weight-main" step="0.1" onchange="saveGlobalWeight()"> KG | 175 CM
+        </div>
+    </header>
+
+    <div class="timer-box">
+        <span id="timer-display">01:00</span>
+        <button class="btn-t" onclick="startTimer(60)">60s</button>
+        <button class="btn-t" onclick="startTimer(90)">90s</button>
+        <button class="btn-t" onclick="startTimer(120)">120s</button>
+        <button class="btn-t" style="background:#444; color:white" onclick="resetTimer()">Reset</button>
+    </div>
+
+    <div class="nav-days">
+        <button class="nav-arrow" onclick="changeDay(-1)">◀</button>
+        <div style="text-align:center">
+            <span style="font-size: 0.6rem; display: block; opacity: 0.5; text-transform: uppercase;">Divisão do Dia</span>
+            <span id="day-name">---</span>
+        </div>
+        <button class="nav-arrow" onclick="changeDay(1)">▶</button>
+    </div>
+
+    <div class="card">
+        <h2>🥩 DIETA DE PRECISÃO</h2>
+        <div id="diet-content"></div>
+    </div>
+
+    <div class="card">
+        <h2>🔥 TREINO (VOLUME MÉXIMO)</h2>
+        <div id="workout-content"></div>
+    </div>
+
+    <div class="card">
+        <h2>🏃 EXTRA & CORE</h2>
+        <div id="cardio-content"></div>
+    </div>
+
+    <button class="btn-reset" onclick="hardReset()">LIMPAR TODOS OS DADOS</button>
+</div>
+
+<script>
+    let currentDay = parseInt(localStorage.getItem('ant_day') || 0);
+    let timerInterval;
+
+    const rotina = [
+        {
+            foco: "Superior Força",
+            diet: ["07:00: 200g Ovos + 50g Abacate", "12:00: 200g Carne + 100g Batata", "15:00: 30g Whey + Café c/ 10g Óleo Coco", "18:00 (Pós): 250g Carne + 150g Batata", "21:00: 170g Iogurte + 100g Mamão"],
+            train: [
+                {e:"Supino Inclinado", r:"4x8"}, {e:"Remada Curvada", r:"4x8"}, 
+                {e:"Desenvolvimento Militar", r:"3x10"}, {e:"Barra Fixa", r:"3x Falha"},
+                {e:"Elevação Lateral", r:"4x15"}, {e:"Rosca Direta + Tríceps Testa", r:"3x12 (Bi-set)"}
+            ],
+            cardio: "30 min Caminhada Inclinada"
+        },
+        {
+            foco: "Inferior Força",
+            diet: ["07:00: 30g Whey + 100g Banana", "12:00: 250g Carne + 50g Abacate", "15:00: 150g Ovos + Café Forte", "18:00 (Pós): 250g Carne + 150g Batata", "21:00: 3 Ovos + 10g Manteiga"],
+            train: [
+                {e:"Agachamento Livre", r:"4x8"}, {e:"Levantamento Terra", r:"3x5"}, 
+                {e:"Leg Press 45", r:"4x10"}, {e:"Cadeira Extensora", r:"3x15"},
+                {e:"Panturrilha em Pé", r:"5x15"}, {e:"Panturrilha Sentado", r:"4x15"}
+            ],
+            cardio: "Stomach Vacuum (5 séries)"
+        },
+        {
+            foco: "Push (Empurrar)",
+            diet: ["07:00: 200g Ovos + 10g Manteiga", "12:00: 250g Carne + 80g Maçã", "15:00: 30g Whey + 10g Óleo Coco", "18:00 (Pós): 200g Carne + 100g Batata", "21:00: 170g Iogurte + 50g Abacate"],
+            train: [
+                {e:"Supino Reto", r:"4x10"}, {e:"Cross Over (Polia)", r:"4x12"}, 
+                {e:"Voador (Peck Deck)", r:"3x15"}, {e:"Elevação Lateral Polia", r:"4x15"},
+                {e:"Tríceps Corda", r:"4x12"}, {e:"Tríceps Coice", r:"3x15"}
+            ],
+            cardio: "30 min Cardio LISS"
+        },
+        {
+            foco: "Pull (Puxar)",
+            diet: ["07:00: 30g Whey + 10g Óleo Coco", "12:00: 250g Carne + 150g Ovos", "15:00: 100g Abacate + 1 Laranja", "18:00 (Pós): 250g Carne + 100g Batata", "21:00: 170g Iogurte Natural"],
+            train: [
+                {e:"Puxada Alta Aberta", r:"4x10"}, {e:"Remada Baixa", r:"4x10"}, 
+                {e:"Crucifixo Inverso", r:"3x15"}, {e:"Encolhimento Trapézio", r:"4x12"},
+                {e:"Rosca Alternada", r:"4x10"}, {e:"Rosca Concentrada", r:"3x12"}
+            ],
+            cardio: "Stomach Vacuum (5 séries)"
+        },
+        {
+            foco: "Legs & Abs",
+            diet: ["07:00: 200g Ovos + Café Forte", "12:00: 200g Carne + 150g Batata", "15:00: 30g Whey + 100g Banana", "18:00 (Pós): 250g Carne + 150g Batata", "21:00: 170g Iogurte + 80g Maçã"],
+            train: [
+                {e:"Afundo / Avanço", r:"4x12"}, {e:"Mesa Flexora", r:"4x15"}, 
+                {e:"Leg Press (Pés altos)", r:"4x12"}, {e:"Panturrilha em Pé", r:"5x20"},
+                {e:"Abdominal Supra", r:"4x20"}, {e:"Abdominal Infra", r:"4x20"}, {e:"Prancha", r:"3x 1min"}
+            ],
+            cardio: "20 min HIIT"
+        }
+    ];
+
+    function render() {
+        const data = rotina[currentDay];
+        document.getElementById('day-name').innerText = data.foco;
+        document.getElementById('global-weight').value = localStorage.getItem('ant_weight') || 75.0;
+
+        document.getElementById('diet-content').innerHTML = data.diet.map((item, i) => `
+            <div class="item ${isDone('diet', i)}" onclick="toggle('diet', ${i})">
+                <div class="item-row">
+                    <span style="font-size:0.8rem">${item}</span>
+                    <div class="check-circle"></div>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('workout-content').innerHTML = data.train.map((item, i) => `
+            <div class="item ${isDone('work', i)}">
+                <div class="item-row" onclick="toggle('work', ${i})">
+                    <div>
+                        <div style="font-weight:bold; font-size:0.85rem">${item.e}</div>
+                        <div style="font-size:0.7rem; opacity:0.6">${item.r}</div>
+                    </div>
+                    <div class="check-circle"></div>
+                </div>
+                <div style="margin-top:8px; border-top:1px solid #333; padding-top:5px; display:flex; align-items:center; justify-content:space-between">
+                    <span style="font-size:0.6rem; color:var(--accent)">CARGA:</span>
+                    <input type="number" class="load-input" value="${getLoad(i)}" onchange="saveLoad(${i}, this.value)">
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('cardio-content').innerHTML = `
+            <div class="item ${isDone('cardio', 0)}" onclick="toggle('cardio', 0)">
+                <div class="item-row">
+                    <span style="font-size:0.85rem">${data.cardio}</span>
+                    <div class="check-circle"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function toggle(type, i) {
+        const key = `ant_v5_d${currentDay}_${type}_${i}`;
+        localStorage.getItem(key) ? localStorage.removeItem(key) : localStorage.setItem(key, 'true');
+        render();
+    }
+    function isDone(type, i) { return localStorage.getItem(`ant_v5_d${currentDay}_${type}_${i}`) ? 'done' : ''; }
+    function saveLoad(i, val) { localStorage.setItem(`ant_v5_load_d${currentDay}_i${i}`, val); }
+    function getLoad(i) { return localStorage.getItem(`ant_v5_load_d${currentDay}_i${i}`) || ''; }
+    function saveGlobalWeight() { localStorage.setItem('ant_weight', document.getElementById('global-weight').value); }
+
+    function changeDay(step) {
+        currentDay = (currentDay + step + 5) % 5;
+        localStorage.setItem('ant_day', currentDay);
+        render();
+    }
+
+    function startTimer(sec) {
+        clearInterval(timerInterval);
+        let t = sec;
+        timerInterval = setInterval(() => {
+            let m = Math.floor(t / 60); let s = t % 60;
+            document.getElementById('timer-display').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            if (t-- <= 0) { clearInterval(timerInterval); }
+        }, 1000);
+    }
+    function resetTimer() { clearInterval(timerInterval); document.getElementById('timer-display').innerText = "01:00"; }
+    function hardReset() { if(confirm("LIMPAR TUDO?")) { localStorage.clear(); location.reload(); } }
+
+    window.onload = render;
+</script>
+</body>
+</html>
