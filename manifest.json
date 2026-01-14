@@ -1,8 +1,10 @@
 {
   "name": "Anthony Pro Evolution",
-  "short_name": "Anthony PRO",
-  "start_url": "index.html",
+  "short_name": "AnthonyPRO",
+  "description": "Treino e Dieta Anthony",
+  "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#050505",
   "theme_color": "#00ff88",
   "icons": [
@@ -10,7 +12,13 @@
       "src": "https://cdn-icons-png.flaticon.com/512/3043/3043234.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3043/3043234.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
