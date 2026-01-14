@@ -16,8 +16,10 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('SW registrado'))
-                .catch(err => console.log('Erro SW', err));
+                .then(reg => {
+                    console.log('App pronto para instalação');
+                })
+                .catch(err => console.log('Erro ao registrar:', err));
             });
         }
     </script>
@@ -153,3 +155,4 @@
 </script>
 </body>
 </html>
+
